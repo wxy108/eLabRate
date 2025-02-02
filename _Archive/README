@@ -1,0 +1,15 @@
+Local Server Instruction:
+
+1. cd project address using cmd, for example:
+
+>X:
+
+>cd "X:\Xiyuan Wang\JHU\Others\1-eLabRate\4-Web\1-Code"
+
+2. Open a local server
+
+>python -m http.server 8000
+
+3. In a browser, open:
+
+>http://localhost:8000/
