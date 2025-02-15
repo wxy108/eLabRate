@@ -1,8 +1,8 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>eLabRate</title>
+	<title>eLabRate - Enhanced</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<!-- Bootstrap CSS -->
@@ -77,18 +77,28 @@
 				border-color: #0056b3;
 			}
 
+		/* Updated lab card with smooth transitions */
 		.lab-card {
 			background: white;
 			border-radius: 15px;
 			padding: 1.5rem;
 			margin-bottom: 1.5rem;
 			box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-			transition: all 0.3s ease;
+			transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
 			position: relative;
 			overflow: hidden;
 			animation: fadeIn 0.5s ease forwards;
 			opacity: 0;
+			height: 250px; /* Initial fixed height */
+			will-change: transform, height, box-shadow;
 		}
+
+			/* Style for expanded state of lab card */
+			.lab-card.expanded {
+				height: auto;
+				max-height: 600px;
+				transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+			}
 
 			.lab-card:hover {
 				transform: translateY(-10px);
@@ -115,7 +125,17 @@
 			.lab-card h3 {
 				color: #007bff;
 				margin-bottom: 0.75rem;
-				font-weight: 600;
+				font-weight: 700;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				font-size: 18px;
+			}
+
+			/* Styles for full lab title when expanded */
+			.lab-card.expanded h3 {
+				white-space: normal;
+				overflow: visible;
 			}
 
 			.lab-card a {
@@ -126,6 +146,95 @@
 				.lab-card a:hover {
 					text-decoration: underline;
 				}
+
+		/* Styles for the additional content */
+		.lab-expanded-content {
+			opacity: 0;
+			visibility: hidden;
+			height: 0;
+			padding-top: 0;
+			border-top: 1px dashed #ccc;
+			margin-top: 15px;
+			transition: opacity 0.4s ease, visibility 0.4s, height 0.4s, padding-top 0.4s;
+			overflow: hidden;
+		}
+
+			.lab-expanded-content.visible {
+				opacity: 1;
+				visibility: visible;
+				height: auto;
+				padding-top: 15px;
+				transition: opacity 0.4s ease 0.1s, visibility 0.4s, height 0.4s, padding-top 0.4s;
+			}
+
+		/* Style for the "show more" button */
+		.show-more-btn {
+			position: absolute;
+			bottom: 10px;
+			left: 50%;
+			transform: translateX(-50%);
+			background: #f0f0f0;
+			border: none;
+			border-radius: 15px;
+			padding: 5px 15px;
+			font-size: 0.8rem;
+			cursor: pointer;
+			color: #555;
+			transition: all 0.3s ease;
+			z-index: 10;
+		}
+
+			.show-more-btn:hover {
+				background: #e0e0e0;
+			}
+
+		/* Status tag styles */
+		.status-tag {
+			display: inline-block;
+			padding: 3px 8px;
+			border-radius: 12px;
+			font-size: 0.8rem;
+			font-weight: 600;
+			margin-right: 5px;
+		}
+
+		.accepting {
+			background-color: rgba(144, 238, 144, 0.6); /* Light green */
+			color: #006400;
+		}
+
+		.seeking {
+			background-color: rgba(135, 206, 250, 0.6); /* Light blue */
+			color: #00008B;
+		}
+
+		.not-accepting {
+			background-color: rgba(255, 182, 193, 0.6); /* Light red */
+			color: #8B0000;
+		}
+
+		/* Keywords styling */
+		.keyword {
+			display: inline-block;
+			background: #f0f0f0;
+			padding: 2px 8px;
+			border-radius: 10px;
+			font-size: 0.75rem;
+			margin: 2px;
+			color: #333;
+		}
+
+		.keyword-container {
+			margin-bottom: 10px;
+		}
+
+		/* Description text styling */
+		.research-description {
+			font-size: 0.9rem;
+			line-height: 1.4;
+			color: #555;
+			margin-bottom: 15px;
+		}
 
 		footer {
 			background: #003366;
@@ -161,7 +270,7 @@
 	<main class="container">
 		<div class="row search-bar">
 			<div class="col-md-6 offset-md-3">
-				<input type="text" id="searchInput" class="form-control" placeholder="🔍 Search labs..." oninput="filterLabs()">
+				<input type="text" id="searchInput" class="form-control" placeholder="🔍 Search labs by name, PI, or keywords..." oninput="filterLabs()">
 			</div>
 		</div>
 
@@ -175,6 +284,41 @@
 	<script>
 		let labsData = [];
 
+		// Sample research fields to randomly select from
+		const researchFields = [
+			"Machine Learning", "Quantum Computing", "Cybersecurity", "Big Data",
+			"Artificial Intelligence", "Robotics", "Biotechnology", "Neuroscience",
+			"Genomics", "Nanotechnology", "Materials Science", "Clean Energy",
+			"Environmental Engineering", "Cloud Computing", "Blockchain", "IoT",
+			"Computer Vision", "Natural Language Processing", "Human-Computer Interaction",
+			"Virtual Reality", "Augmented Reality", "Distributed Systems"
+		];
+
+		// Sample PI names (fictitious)
+		const piNames = [
+			"Dr. Sarah Johnson", "Prof. James Chen", "Dr. Maria Rodriguez",
+			"Prof. David Kim", "Dr. Emily Patel", "Prof. Michael Lee",
+			"Dr. Lisa Wong", "Prof. Robert Smith", "Dr. Thomas Brown",
+			"Prof. Amanda Clark", "Dr. John Williams", "Prof. Elizabeth Taylor"
+		];
+
+		// Sample lab statuses
+		const labStatuses = [
+			"Accepting Students", "Seeking Faculty Collaborators", "Not Accepting Students"
+		];
+
+		// Sample research descriptions
+		const researchDescriptions = [
+			"Our lab focuses on developing novel algorithms for big data analytics with applications in healthcare and finance.",
+			"We investigate quantum computing architectures and their applications in cryptography and optimization problems.",
+			"Our research aims to advance computer vision techniques for autonomous systems and smart environments.",
+			"We develop new materials for renewable energy applications, with a focus on photovoltaics and energy storage.",
+			"Our lab studies machine learning models for natural language understanding and generation.",
+			"We research cybersecurity solutions for critical infrastructure and IoT systems.",
+			"Our team develops biomedical imaging technologies and computational methods for disease diagnosis.",
+			"We investigate robotics systems for human assistance and industrial automation."
+		];
+
 		async function loadCSVData() {
 			try {
 				const response = await fetch('database/labs_trimmed.csv');
@@ -185,13 +329,46 @@
 					header: true,
 					skipEmptyLines: true,
 					complete: function (results) {
-						labsData = results.data;
+						// Enhance the data with additional random fields
+						labsData = enhanceLabData(results.data);
 						showRandomLabs();
 					}
 				});
 			} catch (error) {
 				console.error("Error loading CSV data:", error);
 			}
+		}
+
+		// Function to add random additional fields to each lab
+		function enhanceLabData(labs) {
+			return labs.map(lab => {
+				// Generate 2-4 random keywords
+				const keywordCount = 2 + Math.floor(Math.random() * 3);
+				const keywords = [];
+				for (let i = 0; i < keywordCount; i++) {
+					const randomKeyword = researchFields[Math.floor(Math.random() * researchFields.length)];
+					if (!keywords.includes(randomKeyword)) {
+						keywords.push(randomKeyword);
+					}
+				}
+
+				// Random PI name
+				const pi = piNames[Math.floor(Math.random() * piNames.length)];
+
+				// Random lab status
+				const status = labStatuses[Math.floor(Math.random() * labStatuses.length)];
+
+				// Random research description
+				const description = researchDescriptions[Math.floor(Math.random() * researchDescriptions.length)];
+
+				return {
+					...lab,
+					"Keywords": keywords,
+					"PI": pi,
+					"Status": status,
+					"Description": description
+				};
+			});
 		}
 
 		function showRandomLabs() {
@@ -205,21 +382,124 @@
 
 			labs.forEach((lab, index) => {
 				const col = document.createElement('div');
-				col.classList.add('col-md-4', 'mb-3'); // 3 labs per row
+				col.classList.add('col-md-4', 'mb-4'); // 3 labs per row, more bottom margin
+
+				// Generate status class based on lab status
+				let statusClass = "";
+				switch (lab["Status"]) {
+					case "Accepting Students":
+						statusClass = "accepting";
+						break;
+					case "Seeking Faculty Collaborators":
+						statusClass = "seeking";
+						break;
+					case "Not Accepting Students":
+						statusClass = "not-accepting";
+						break;
+				}
+
+				// Generate HTML for keywords
+				const keywordsHTML = lab["Keywords"].map(kw =>
+					`<span class="keyword">${kw}</span>`
+				).join(' ');
 
 				col.innerHTML = `
-						<div class="lab-card" style="animation-delay: ${index * 0.1}s;">
-							<h3>${lab["Lab Name"]}</h3>
-							<p><strong><i class="fas fa-book"></i> Source:</strong> ${lab["Source"]}</p>
-							<p><strong><i class="fas fa-link"></i> URL:</strong>
-								<a href="${lab["URL"]}" target="_blank">${shortenURL(lab["URL"])}</a>
-							</p>
+						<div class="lab-card" style="animation-delay: ${index * 0.1}s;" data-expanded="false">
+							<h3 class="lab-title" title="${lab["Lab Name"]}">${lab["Lab Name"]}</h3>
+							<p><strong><i class="fas fa-user-tie"></i> PI:</strong> ${lab["PI"]}</p>
+							<p><strong><i class="fas fa-building"></i> Department:</strong> ${lab["Source"]}</p>
+							<span class="status-tag ${statusClass}">${lab["Status"]}</span>
+
+							<!-- Hidden content that shows on hover -->
+							<div class="lab-expanded-content">
+								<div class="keyword-container">
+									<strong><i class="fas fa-tags"></i> Research Keywords:</strong><br>
+									${keywordsHTML}
+								</div>
+								<p class="research-description"><strong><i class="fas fa-microscope"></i> Research:</strong><br>${lab["Description"]}</p>
+								<p><strong><i class="fas fa-link"></i> URL:</strong>
+									<a href="${lab["URL"]}" target="_blank">${shortenURL(lab["URL"])}</a>
+								</p>
+							</div>
+
+							<button class="show-more-btn">Show More <i class="fas fa-chevron-down"></i></button>
 						</div>
 					`;
 				container.appendChild(col);
 			});
 
+			// Add event listeners for hovering and button clicks
+			setupCardInteractions();
+
 			document.getElementById('labCount').textContent = `${labs.length} Labs Displayed`;
+		}
+
+		function setupCardInteractions() {
+			const cards = document.querySelectorAll('.lab-card');
+
+			cards.forEach(card => {
+				let hoverTimer;
+
+				// Mouse enter - start timer for auto-expand
+				card.addEventListener('mouseenter', function () {
+					hoverTimer = setTimeout(() => {
+						expandCard(card);
+					}, 500); // 0.5 second hover to auto-expand
+				});
+
+				// Mouse leave - clear timer and fold the card
+				card.addEventListener('mouseleave', function () {
+					clearTimeout(hoverTimer);
+					// Start folding the card when mouse leaves
+					collapseCard(card);
+				});
+
+				// Click on show more button
+				const button = card.querySelector('.show-more-btn');
+				button.addEventListener('click', function (e) {
+					e.stopPropagation();
+					toggleCard(card);
+				});
+			});
+		}
+
+		function expandCard(card) {
+			if (card.getAttribute('data-expanded') === 'false') {
+				toggleCard(card);
+			}
+		}
+
+		function collapseCard(card) {
+			if (card.getAttribute('data-expanded') === 'true') {
+				toggleCard(card);
+			}
+		}
+
+		function toggleCard(card) {
+			const expandedContent = card.querySelector('.lab-expanded-content');
+			const button = card.querySelector('.show-more-btn');
+
+			if (card.getAttribute('data-expanded') === 'false') {
+				// Expand
+				card.classList.add('expanded');
+
+				// First make the content visible with transitions
+				expandedContent.classList.add('visible');
+
+				button.innerHTML = 'Show Less <i class="fas fa-chevron-up"></i>';
+				card.setAttribute('data-expanded', 'true');
+
+			} else {
+				// Collapse
+				expandedContent.classList.remove('visible');
+
+				// Wait for the content transition before collapsing the card
+				setTimeout(() => {
+					card.classList.remove('expanded');
+					button.innerHTML = 'Show More <i class="fas fa-chevron-down"></i>';
+					card.setAttribute('data-expanded', 'false');
+				}, 400); // Match this with the transition time of the content
+			}
 		}
 
 		function shortenURL(url) {
@@ -239,12 +519,15 @@
 			} else {
 				const filteredLabs = labsData.filter(lab =>
 					lab["Lab Name"].toLowerCase().includes(searchValue) ||
-					lab["Source"].toLowerCase().includes(searchValue)
+					lab["Source"].toLowerCase().includes(searchValue) ||
+					lab["PI"].toLowerCase().includes(searchValue) || // Search by PI name
+					lab["Keywords"].some(kw => kw.toLowerCase().includes(searchValue)) // Search by keywords
 				);
 				renderLabs(filteredLabs);
 			}
 		}
 
+		// Initialize everything when the DOM is loaded
 		document.addEventListener('DOMContentLoaded', loadCSVData);
 	</script>
 
