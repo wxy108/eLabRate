@@ -1,535 +1,498 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<title>eLabRate - Enhanced</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>eLabRate - Enhanced</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<!-- Bootstrap CSS -->
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-	<!-- Font Awesome (for icons) -->
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Font Awesome (for icons) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-	<!-- Papa Parse (CSV Parser) -->
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- Papa Parse (for CSV, if needed) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- XLSX Library to parse Excel files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-	<style>
-		body {
-			background: linear-gradient(135deg, #eef2f3 0%, #d3d3d3 100%);
-			font-family: 'Arial', sans-serif;
-			margin: 0;
-			padding: 0;
-			color: #333;
-		}
+    <style>
+        body {
+            background: linear-gradient(135deg, #eef2f3 0%, #d3d3d3 100%);
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
 
-		header {
-			background: linear-gradient(to right, #003366, #0056b3);
-			color: white;
-			padding: 2rem;
-			text-align: center;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 1rem;
-			transition: all 0.3s ease;
-		}
+        header {
+            background: linear-gradient(to right, #003366, #0056b3);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+        }
 
-			header:hover {
-				transform: translateY(-5px);
-				box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-			}
+            header:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            }
 
-			header h1 {
-				margin: 0;
-				font-size: 5rem;
-				font-weight: 700;
-				text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-			}
+            header h1 {
+                margin: 0;
+                font-size: 5rem;
+                font-weight: 700;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            }
 
-		.logo-img {
-			width: 100px;
-			height: 75px;
-			border-radius: 50%;
-			border: 2px solid white;
-			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-			transition: transform 0.5s ease;
-		}
+        .logo-img {
+            width: 100px;
+            height: 75px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.5s ease;
+        }
 
-			.logo-img:hover {
-				transform: rotate(360deg);
-			}
+            .logo-img:hover {
+                transform: rotate(360deg);
+            }
 
-		.search-bar {
-			margin: 2rem auto;
-			perspective: 1000px;
-		}
+        .search-bar {
+            margin: 2rem auto;
+            perspective: 1000px;
+        }
 
-		#searchInput {
-			border-radius: 20px;
-			padding: 10px 20px;
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-			border: 1px solid #bbb;
-		}
+        #searchInput {
+            border-radius: 20px;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #bbb;
+            width: 100%;
+        }
 
-			#searchInput:focus {
-				box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-				border-color: #0056b3;
-			}
+            #searchInput:focus {
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                border-color: #0056b3;
+            }
 
-		/* Updated lab card with smooth transitions */
-		.lab-card {
-			background: white;
-			border-radius: 15px;
-			padding: 1.5rem;
-			margin-bottom: 1.5rem;
-			box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-			transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
-			position: relative;
-			overflow: hidden;
-			animation: fadeIn 0.5s ease forwards;
-			opacity: 0;
-			height: 250px; /* Initial fixed height */
-			will-change: transform, height, box-shadow;
-		}
+        /* Tag container: use flex with no wrapping so that all 4 tags remain on one row */
+        #tagContainer {
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            flex-wrap: nowrap;
+            gap: 10px;
+        }
 
-			/* Style for expanded state of lab card */
-			.lab-card.expanded {
-				height: auto;
-				max-height: 600px;
-				transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
-			}
+        .tag {
+            display: inline-block;
+            padding: 5px 10px;
+            border: 1px solid #007bff;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #007bff;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
 
-			.lab-card:hover {
-				transform: translateY(-10px);
-				box-shadow: 0 8px 15px rgba(0,0,0,0.2);
-			}
+            .tag.active, .tag:hover {
+                background-color: #007bff;
+                color: white;
+            }
 
-			.lab-card::before {
-				content: '';
-				position: absolute;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 5px;
-				background: linear-gradient(to right, #007bff, #0056b3);
-				transform: scaleX(0);
-				transform-origin: left;
-				transition: transform 0.3s ease;
-			}
+        /* Lab card styles with smooth transitions */
+        .lab-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease forwards;
+            opacity: 0;
+            will-change: transform, height, box-shadow;
+        }
 
-			.lab-card:hover::before {
-				transform: scaleX(1);
-			}
+            .lab-card.expanded {
+                transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+            }
 
-			.lab-card h3 {
-				color: #007bff;
-				margin-bottom: 0.75rem;
-				font-weight: 700;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				font-size: 18px;
-			}
+            .lab-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            }
 
-			/* Styles for full lab title when expanded */
-			.lab-card.expanded h3 {
-				white-space: normal;
-				overflow: visible;
-			}
+            .lab-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 5px;
+                background: linear-gradient(to right, #007bff, #0056b3);
+                transform: scaleX(0);
+                transform-origin: left;
+                transition: transform 0.3s ease;
+            }
 
-			.lab-card a {
-				text-decoration: none;
-				color: #007bff;
-			}
+            .lab-card:hover::before {
+                transform: scaleX(1);
+            }
 
-				.lab-card a:hover {
-					text-decoration: underline;
-				}
+            .lab-card h3 {
+                color: #007bff;
+                margin-bottom: 0.75rem;
+                font-weight: 700;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 18px;
+            }
 
-		/* Styles for the additional content */
-		.lab-expanded-content {
-			opacity: 0;
-			visibility: hidden;
-			height: 0;
-			padding-top: 0;
-			border-top: 1px dashed #ccc;
-			margin-top: 15px;
-			transition: opacity 0.4s ease, visibility 0.4s, height 0.4s, padding-top 0.4s;
-			overflow: hidden;
-		}
+            .lab-card.expanded h3 {
+                white-space: normal;
+                overflow: visible;
+            }
 
-			.lab-expanded-content.visible {
-				opacity: 1;
-				visibility: visible;
-				height: auto;
-				padding-top: 15px;
-				transition: opacity 0.4s ease 0.1s, visibility 0.4s, height 0.4s, padding-top 0.4s;
-			}
+            .lab-card a {
+                text-decoration: none;
+                color: #007bff;
+            }
 
-		/* Style for the "show more" button */
-		.show-more-btn {
-			position: absolute;
-			bottom: 10px;
-			left: 50%;
-			transform: translateX(-50%);
-			background: #f0f0f0;
-			border: none;
-			border-radius: 15px;
-			padding: 5px 15px;
-			font-size: 0.8rem;
-			cursor: pointer;
-			color: #555;
-			transition: all 0.3s ease;
-			z-index: 10;
-		}
+                .lab-card a:hover {
+                    text-decoration: underline;
+                }
 
-			.show-more-btn:hover {
-				background: #e0e0e0;
-			}
+        .keyword {
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin: 2px;
+            color: #333;
+        }
 
-		/* Status tag styles */
-		.status-tag {
-			display: inline-block;
-			padding: 3px 8px;
-			border-radius: 12px;
-			font-size: 0.8rem;
-			font-weight: 600;
-			margin-right: 5px;
-		}
+        /* Folded info: each row confined to one line */
+        .folded-info .folded-row {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin: 2px 0;
+            font-size: 0.9rem;
+        }
 
-		.accepting {
-			background-color: rgba(144, 238, 144, 0.6); /* Light green */
-			color: #006400;
-		}
+        .folded-info {
+            margin-bottom: 10px;
+        }
 
-		.seeking {
-			background-color: rgba(135, 206, 250, 0.6); /* Light blue */
-			color: #00008B;
-		}
+        /* When lab card is expanded, allow research keywords row to display fully */
+        .lab-card.expanded .folded-info .keywords-row {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+        }
 
-		.not-accepting {
-			background-color: rgba(255, 182, 193, 0.6); /* Light red */
-			color: #8B0000;
-		}
+        .lab-expanded-content {
+            opacity: 0;
+            visibility: hidden;
+            height: 0;
+            padding-top: 0;
+            border-top: 1px dashed #ccc;
+            margin-top: 15px;
+            transition: opacity 0.4s ease, visibility 0.4s, height 0.4s, padding-top 0.4s;
+            overflow: hidden;
+        }
 
-		/* Keywords styling */
-		.keyword {
-			display: inline-block;
-			background: #f0f0f0;
-			padding: 2px 8px;
-			border-radius: 10px;
-			font-size: 0.75rem;
-			margin: 2px;
-			color: #333;
-		}
+            .lab-expanded-content.visible {
+                opacity: 1;
+                visibility: visible;
+                height: auto;
+                padding-top: 15px;
+                transition: opacity 0.4s ease 0.1s, visibility 0.4s, height 0.4s, padding-top 0.4s;
+            }
 
-		.keyword-container {
-			margin-bottom: 10px;
-		}
+        .show-more-btn {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f0f0f0;
+            border: none;
+            border-radius: 15px;
+            padding: 5px 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: #555;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
 
-		/* Description text styling */
-		.research-description {
-			font-size: 0.9rem;
-			line-height: 1.4;
-			color: #555;
-			margin-bottom: 15px;
-		}
+            .show-more-btn:hover {
+                background: #e0e0e0;
+            }
 
-		footer {
-			background: #003366;
-			color: white;
-			padding: 1rem;
-			text-align: center;
-			font-size: 0.9rem;
-		}
+        footer {
+            background: #003366;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
 
-		@keyframes fadeIn {
-			from {
-				opacity: 0;
-				transform: translateY(20px);
-			}
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
 
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
-	</style>
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <img src="logo/logo_v0.png" alt="eLabRate Logo" class="logo-img">
+        <div>
+            <h1>eLabRate</h1>
+            <p>Your gateway to university lab information</p>
+        </div>
+    </header>
 
-	<header>
-		<img src="logo/logo_v0.png" alt="eLabRate Logo" class="logo-img">
-		<div>
-			<h1>eLabRate</h1>
-			<p>Your gateway to university lab information</p>
-		</div>
-	</header>
+    <main class="container">
+        <div class="row search-bar">
+            <div class="col-md-6 offset-md-3">
+                <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search labs by name, title, or keywords..." oninput="filterLabs()">
+            </div>
+        </div>
+        <!-- Tag container: not restricted by a grid column -->
+        <div id="tagContainer"></div>
 
-	<main class="container">
-		<div class="row search-bar">
-			<div class="col-md-6 offset-md-3">
-				<input type="text" id="searchInput" class="form-control" placeholder="🔍 Search labs by name, PI, or keywords..." oninput="filterLabs()">
-			</div>
-		</div>
+        <div class="row" id="labContainer"></div>
+    </main>
 
-		<div class="row" id="labContainer"></div>
-	</main>
+    <footer>
+        <p>© 2025 eLabRate. All rights reserved. <span id="labCount" class="badge bg-light text-dark"></span></p>
+    </footer>
 
-	<footer>
-		<p>© 2025 eLabRate. All rights reserved. <span id="labCount" class="badge bg-light text-dark"></span></p>
-	</footer>
+    <script>
+        let labsData = [];
+        let selectedTags = [];
 
-	<script>
-		let labsData = [];
+        // Load the Excel file (labs_merged.xlsx) using XLSX library
+        async function loadXLSXData() {
+            try {
+                const response = await fetch('database/labs_merged.xlsx');
+                if (!response.ok) throw new Error('Failed to load Excel file');
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                // Use defval:"" so missing fields become blank
+                labsData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                showRandomLabs();
+                updateTags();
+            } catch (error) {
+                console.error("Error loading Excel data:", error);
+            }
+        }
 
-		// Sample research fields to randomly select from
-		const researchFields = [
-			"Machine Learning", "Quantum Computing", "Cybersecurity", "Big Data",
-			"Artificial Intelligence", "Robotics", "Biotechnology", "Neuroscience",
-			"Genomics", "Nanotechnology", "Materials Science", "Clean Energy",
-			"Environmental Engineering", "Cloud Computing", "Blockchain", "IoT",
-			"Computer Vision", "Natural Language Processing", "Human-Computer Interaction",
-			"Virtual Reality", "Augmented Reality", "Distributed Systems"
-		];
+        // Update tag container with 4 random research keywords from all labs
+        function updateTags() {
+            const tagSet = new Set();
+            labsData.forEach(lab => {
+                if (lab["Research Keywords"]) {
+                    // Split using either a comma or a pipe
+                    lab["Research Keywords"].split(/[|,]/).forEach(kw => {
+                        const trimmed = kw.trim();
+                        if (trimmed) tagSet.add(trimmed);
+                    });
+                }
+            });
+            const allTags = Array.from(tagSet);
+            // Shuffle the array
+            allTags.sort(() => 0.5 - Math.random());
+            // Select up to 4 tags
+            const selected = allTags.slice(0, 4);
 
-		// Sample PI names (fictitious)
-		const piNames = [
-			"Dr. Sarah Johnson", "Prof. James Chen", "Dr. Maria Rodriguez",
-			"Prof. David Kim", "Dr. Emily Patel", "Prof. Michael Lee",
-			"Dr. Lisa Wong", "Prof. Robert Smith", "Dr. Thomas Brown",
-			"Prof. Amanda Clark", "Dr. John Williams", "Prof. Elizabeth Taylor"
-		];
+            const tagContainer = document.getElementById('tagContainer');
+            tagContainer.innerHTML = "";
+            selected.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = "tag";
+                span.textContent = tag;
+                span.dataset.tag = tag;
+                span.addEventListener('click', function () {
+                    toggleTagSelection(tag, span);
+                });
+                tagContainer.appendChild(span);
+            });
+        }
 
-		// Sample lab statuses
-		const labStatuses = [
-			"Accepting Students", "Seeking Faculty Collaborators", "Not Accepting Students"
-		];
+        // Toggle tag selection and update filtering
+        function toggleTagSelection(tag, element) {
+            const index = selectedTags.indexOf(tag);
+            if (index > -1) {
+                // Deselect
+                selectedTags.splice(index, 1);
+                element.classList.remove('active');
+            } else {
+                // Select
+                selectedTags.push(tag);
+                element.classList.add('active');
+            }
+            filterLabs();
+        }
 
-		// Sample research descriptions
-		const researchDescriptions = [
-			"Our lab focuses on developing novel algorithms for big data analytics with applications in healthcare and finance.",
-			"We investigate quantum computing architectures and their applications in cryptography and optimization problems.",
-			"Our research aims to advance computer vision techniques for autonomous systems and smart environments.",
-			"We develop new materials for renewable energy applications, with a focus on photovoltaics and energy storage.",
-			"Our lab studies machine learning models for natural language understanding and generation.",
-			"We research cybersecurity solutions for critical infrastructure and IoT systems.",
-			"Our team develops biomedical imaging technologies and computational methods for disease diagnosis.",
-			"We investigate robotics systems for human assistance and industrial automation."
-		];
+        // Show a random subset (6 labs) when no search text and no tags selected
+        function showRandomLabs() {
+            const shuffled = labsData.sort(() => 0.5 - Math.random());
+            renderLabs(shuffled.slice(0, 6));
+        }
 
-		async function loadCSVData() {
-			try {
-				const response = await fetch('database/labs_trimmed.csv');
-				if (!response.ok) throw new Error('Failed to load CSV file');
+        // Render labs with updated lab card structure
+        function renderLabs(labs) {
+            const container = document.getElementById('labContainer');
+            container.innerHTML = "";
 
-				const csvText = await response.text();
-				Papa.parse(csvText, {
-					header: true,
-					skipEmptyLines: true,
-					complete: function (results) {
-						// Enhance the data with additional random fields
-						labsData = enhanceLabData(results.data);
-						showRandomLabs();
-					}
-				});
-			} catch (error) {
-				console.error("Error loading CSV data:", error);
-			}
-		}
+            labs.forEach((lab, index) => {
+                // Process research keywords by splitting on either commas or pipes.
+                let keywordsArr = lab["Research Keywords"]
+                    ? lab["Research Keywords"].split(/[|,]/).map(s => s.trim()).filter(s => s.length > 0)
+                    : [];
+                const keywordsHTML = keywordsArr.map(kw => `<span class="keyword">${kw}</span>`).join(' ');
 
-		// Function to add random additional fields to each lab
-		function enhanceLabData(labs) {
-			return labs.map(lab => {
-				// Generate 2-4 random keywords
-				const keywordCount = 2 + Math.floor(Math.random() * 3);
-				const keywords = [];
-				for (let i = 0; i < keywordCount; i++) {
-					const randomKeyword = researchFields[Math.floor(Math.random() * researchFields.length)];
-					if (!keywords.includes(randomKeyword)) {
-						keywords.push(randomKeyword);
-					}
-				}
+                // Build the folded info container with five rows.
+                const foldedInfoHTML = `
+              <div class="folded-info">
+                <p class="folded-row"><strong>PI:</strong> ${lab["PI"] ? lab["PI"] : ""}</p>
+                <p class="folded-row"><strong>Title:</strong> ${lab["Title"] ? lab["Title"] : ""}</p>
+                <p class="folded-row"><strong>School:</strong> Johns Hopkins University</p>
+                <p class="folded-row"><strong>Department:</strong> ${lab["Source"]}</p>
+                <p class="folded-row keywords-row"><strong>Research Keywords:</strong> ${keywordsHTML}</p>
+              </div>
+            `;
 
-				// Random PI name
-				const pi = piNames[Math.floor(Math.random() * piNames.length)];
+                const col = document.createElement('div');
+                col.classList.add('col-md-4', 'mb-4');
+                col.innerHTML = `
+              <div class="lab-card" style="animation-delay: ${index * 0.1}s;" data-expanded="false">
+                <h3 class="lab-title" title="${lab["Lab Name"]}">${lab["Lab Name"]}</h3>
+                ${foldedInfoHTML}
+                <div class="lab-expanded-content">
+                  <p><strong>URL:</strong> <a href="${lab["URL"]}" target="_blank">${shortenURL(lab["URL"])}</a></p>
+                  <p><strong>Location:</strong> ${lab["Location"]}</p>
+                  <p><strong>Summary:</strong> ${lab["Summary of Current Work"]}</p>
+                  <p><strong>Contact:</strong> ${lab["Contact Information"]}</p>
+                </div>
+                <button class="show-more-btn">Show More <i class="fas fa-chevron-down"></i></button>
+              </div>
+            `;
+                container.appendChild(col);
+            });
 
-				// Random lab status
-				const status = labStatuses[Math.floor(Math.random() * labStatuses.length)];
+            setupCardInteractions();
+            document.getElementById('labCount').textContent = `${labs.length} Labs Displayed`;
+        }
 
-				// Random research description
-				const description = researchDescriptions[Math.floor(Math.random() * researchDescriptions.length)];
+        // Set up hover and click interactions for lab cards
+        function setupCardInteractions() {
+            const cards = document.querySelectorAll('.lab-card');
+            cards.forEach(card => {
+                let hoverTimer;
+                card.addEventListener('mouseenter', function () {
+                    hoverTimer = setTimeout(() => {
+                        expandCard(card);
+                    }, 500);
+                });
+                card.addEventListener('mouseleave', function () {
+                    clearTimeout(hoverTimer);
+                    collapseCard(card);
+                });
+                const button = card.querySelector('.show-more-btn');
+                button.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    toggleCard(card);
+                });
+            });
+        }
 
-				return {
-					...lab,
-					"Keywords": keywords,
-					"PI": pi,
-					"Status": status,
-					"Description": description
-				};
-			});
-		}
+        function expandCard(card) {
+            if (card.getAttribute('data-expanded') === 'false') {
+                toggleCard(card);
+            }
+        }
 
-		function showRandomLabs() {
-			const shuffled = labsData.sort(() => 0.5 - Math.random());
-			renderLabs(shuffled.slice(0, 6)); // Show only 6 random labs
-		}
+        function collapseCard(card) {
+            if (card.getAttribute('data-expanded') === 'true') {
+                toggleCard(card);
+            }
+        }
 
-		function renderLabs(labs) {
-			const container = document.getElementById('labContainer');
-			container.innerHTML = "";
+        function toggleCard(card) {
+            const expandedContent = card.querySelector('.lab-expanded-content');
+            const button = card.querySelector('.show-more-btn');
+            if (card.getAttribute('data-expanded') === 'false') {
+                card.classList.add('expanded');
+                expandedContent.classList.add('visible');
+                button.innerHTML = 'Show Less <i class="fas fa-chevron-up"></i>';
+                card.setAttribute('data-expanded', 'true');
+            } else {
+                expandedContent.classList.remove('visible');
+                setTimeout(() => {
+                    card.classList.remove('expanded');
+                    button.innerHTML = 'Show More <i class="fas fa-chevron-down"></i>';
+                    card.setAttribute('data-expanded', 'false');
+                }, 400);
+            }
+        }
 
-			labs.forEach((lab, index) => {
-				const col = document.createElement('div');
-				col.classList.add('col-md-4', 'mb-4'); // 3 labs per row, more bottom margin
+        // Shorten URL for display
+        function shortenURL(url) {
+            try {
+                const parsedURL = new URL(url);
+                return parsedURL.hostname.replace("www.", "") + " ...";
+            } catch (e) {
+                return url.length > 30 ? url.substring(0, 30) + "..." : url;
+            }
+        }
 
-				// Generate status class based on lab status
-				let statusClass = "";
-				switch (lab["Status"]) {
-					case "Accepting Students":
-						statusClass = "accepting";
-						break;
-					case "Seeking Faculty Collaborators":
-						statusClass = "seeking";
-						break;
-					case "Not Accepting Students":
-						statusClass = "not-accepting";
-						break;
-				}
+        // Combined filter function based on search input and selected tags
+        function filterLabs() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
 
-				// Generate HTML for keywords
-				const keywordsHTML = lab["Keywords"].map(kw =>
-					`<span class="keyword">${kw}</span>`
-				).join(' ');
+            // If no search text and no tags, show random labs
+            if (searchValue === "" && selectedTags.length === 0) {
+                showRandomLabs();
+                return;
+            }
 
-				col.innerHTML = `
-						<div class="lab-card" style="animation-delay: ${index * 0.1}s;" data-expanded="false">
-							<h3 class="lab-title" title="${lab["Lab Name"]}">${lab["Lab Name"]}</h3>
-							<p><strong><i class="fas fa-user-tie"></i> PI:</strong> ${lab["PI"]}</p>
-							<p><strong><i class="fas fa-building"></i> Department:</strong> ${lab["Source"]}</p>
-							<span class="status-tag ${statusClass}">${lab["Status"]}</span>
+            const filteredLabs = labsData.filter(lab => {
+                const combinedText = (lab["Lab Name"] + " " + lab["Source"] + " " + lab["Title"] + " " + lab["Research Keywords"]).toLowerCase();
+                const searchMatch = combinedText.includes(searchValue);
+                let tagMatch = true;
+                if (selectedTags.length > 0) {
+                    tagMatch = selectedTags.some(tag => {
+                        return lab["Research Keywords"].toLowerCase().includes(tag.toLowerCase());
+                    });
+                }
+                return searchMatch && tagMatch;
+            });
+            renderLabs(filteredLabs);
+        }
 
-							<!-- Hidden content that shows on hover -->
-							<div class="lab-expanded-content">
-								<div class="keyword-container">
-									<strong><i class="fas fa-tags"></i> Research Keywords:</strong><br>
-									${keywordsHTML}
-								</div>
-								<p class="research-description"><strong><i class="fas fa-microscope"></i> Research:</strong><br>${lab["Description"]}</p>
-								<p><strong><i class="fas fa-link"></i> URL:</strong>
-									<a href="${lab["URL"]}" target="_blank">${shortenURL(lab["URL"])}</a>
-								</p>
-							</div>
-
-							<button class="show-more-btn">Show More <i class="fas fa-chevron-down"></i></button>
-						</div>
-					`;
-				container.appendChild(col);
-			});
-
-			// Add event listeners for hovering and button clicks
-			setupCardInteractions();
-
-			document.getElementById('labCount').textContent = `${labs.length} Labs Displayed`;
-		}
-
-		function setupCardInteractions() {
-			const cards = document.querySelectorAll('.lab-card');
-
-			cards.forEach(card => {
-				let hoverTimer;
-
-				// Mouse enter - start timer for auto-expand
-				card.addEventListener('mouseenter', function () {
-					hoverTimer = setTimeout(() => {
-						expandCard(card);
-					}, 500); // 0.5 second hover to auto-expand
-				});
-
-				// Mouse leave - clear timer and fold the card
-				card.addEventListener('mouseleave', function () {
-					clearTimeout(hoverTimer);
-					// Start folding the card when mouse leaves
-					collapseCard(card);
-				});
-
-				// Click on show more button
-				const button = card.querySelector('.show-more-btn');
-				button.addEventListener('click', function (e) {
-					e.stopPropagation();
-					toggleCard(card);
-				});
-			});
-		}
-
-		function expandCard(card) {
-			if (card.getAttribute('data-expanded') === 'false') {
-				toggleCard(card);
-			}
-		}
-
-		function collapseCard(card) {
-			if (card.getAttribute('data-expanded') === 'true') {
-				toggleCard(card);
-			}
-		}
-
-		function toggleCard(card) {
-			const expandedContent = card.querySelector('.lab-expanded-content');
-			const button = card.querySelector('.show-more-btn');
-
-			if (card.getAttribute('data-expanded') === 'false') {
-				// Expand
-				card.classList.add('expanded');
-
-				// First make the content visible with transitions
-				expandedContent.classList.add('visible');
-
-				button.innerHTML = 'Show Less <i class="fas fa-chevron-up"></i>';
-				card.setAttribute('data-expanded', 'true');
-
-			} else {
-				// Collapse
-				expandedContent.classList.remove('visible');
-
-				// Wait for the content transition before collapsing the card
-				setTimeout(() => {
-					card.classList.remove('expanded');
-					button.innerHTML = 'Show More <i class="fas fa-chevron-down"></i>';
-					card.setAttribute('data-expanded', 'false');
-				}, 400); // Match this with the transition time of the content
-			}
-		}
-
-		function shortenURL(url) {
-			try {
-				const parsedURL = new URL(url);
-				return parsedURL.hostname.replace("www.", "") + " ...";
-			} catch (e) {
-				return url.length > 30 ? url.substring(0, 30) + "..." : url;
-			}
-		}
-
-		function filterLabs() {
-			const searchValue = document.getElementById('searchInput').value.toLowerCase();
-
-			if (searchValue === "") {
-				showRandomLabs(); // If search bar is cleared, show random 6 labs
-			} else {
-				const filteredLabs = labsData.filter(lab =>
-					lab["Lab Name"].toLowerCase().includes(searchValue) ||
-					lab["Source"].toLowerCase().includes(searchValue) ||
-					lab["PI"].toLowerCase().includes(searchValue) || // Search by PI name
-					lab["Keywords"].some(kw => kw.toLowerCase().includes(searchValue)) // Search by keywords
-				);
-				renderLabs(filteredLabs);
-			}
-		}
-
-		// Initialize everything when the DOM is loaded
-		document.addEventListener('DOMContentLoaded', loadCSVData);
-	</script>
-
+        // Initialize when DOM content is loaded
+        document.addEventListener('DOMContentLoaded', loadXLSXData);
+    </script>
 </body>
 </html>
