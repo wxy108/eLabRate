@@ -15,6 +15,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <!-- XLSX Library to parse Excel files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Mammoth.js for parsing DOCX files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 
     <style>
         body {
@@ -247,6 +249,89 @@
             font-size: 0.9rem;
         }
 
+        /* Footer link styles */
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .footer-link {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .footer-link:hover {
+            color: #a9d4ff;
+            transform: translateY(-2px);
+        }
+
+        /* Modal styles for policy documents */
+        .policy-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+        }
+
+        .policy-modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 80%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .policy-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .policy-close:hover {
+            color: #555;
+        }
+
+        .policy-title {
+            color: #003366;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #003366;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -275,19 +360,59 @@
                 <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search labs by name, title, or keywords..." oninput="filterLabs()">
             </div>
         </div>
-        <!-- Tag container: not restricted by a grid column -->
-        <div id="tagContainer"></div>
-
-        <div class="row" id="labContainer"></div>
+        
+        <!-- Tag container -->
+        <div id="tagContainer" class="d-flex justify-content-center flex-wrap gap-2 my-3">
+            <!-- Tags dynamically populated -->
+        </div>
+        
+        <!-- Labs Container -->
+        <div id="labContainer" class="row">
+            <!-- Lab cards dynamically populated -->
+        </div>
     </main>
 
     <footer>
         <p>© 2025 eLabRate. All rights reserved. <span id="labCount" class="badge bg-light text-dark"></span></p>
+        <div class="footer-links">
+            <a class="footer-link" id="disclaimerLink">
+                <i class="fas fa-shield-alt"></i> Disclaimer
+            </a>
+            <a class="footer-link" id="privacyLink">
+                <i class="fas fa-lock"></i> Privacy Policy
+            </a>
+        </div>
     </footer>
+
+    <!-- Disclaimer Modal -->
+    <div id="disclaimerModal" class="policy-modal">
+        <div class="policy-modal-content">
+            <span class="policy-close">&times;</span>
+            <h2 class="policy-title">Disclaimer</h2>
+            <div id="disclaimerContent">
+                <div class="loading-spinner"></div>
+                <p>Loading disclaimer...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacyModal" class="policy-modal">
+        <div class="policy-modal-content">
+            <span class="policy-close">&times;</span>
+            <h2 class="policy-title">Privacy Policy</h2>
+            <div id="privacyContent">
+                <div class="loading-spinner"></div>
+                <p>Loading privacy policy...</p>
+            </div>
+        </div>
+    </div>
 
     <script>
         let labsData = [];
         let selectedTags = [];
+        let disclaimerData = null;
+        let privacyData = null;
 
         // Load the Excel file (labs_merged.xlsx) using XLSX library
         async function loadXLSXData() {
@@ -491,8 +616,73 @@
             renderLabs(filteredLabs);
         }
 
+        // Load DOCX file and convert to HTML
+        async function loadDocxFile(filename) {
+            try {
+                const response = await fetch(`database/${filename}`);
+                if (!response.ok) throw new Error(`Failed to load ${filename}`);
+                const arrayBuffer = await response.arrayBuffer();
+                const result = await mammoth.convertToHtml({ arrayBuffer });
+                return result.value;
+            } catch (error) {
+                console.error(`Error loading ${filename}:`, error);
+                return `<p>Error loading ${filename}. Please try again later.</p>`;
+            }
+        }
+
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Load disclaimer data
+        async function loadDisclaimerData() {
+            if (!disclaimerData) {
+                disclaimerData = await loadDocxFile('Elabrate_Disclaimer.docx');
+                document.getElementById('disclaimerContent').innerHTML = disclaimerData;
+            }
+            openModal('disclaimerModal');
+        }
+
+        // Load privacy policy data
+        async function loadPrivacyData() {
+            if (!privacyData) {
+                privacyData = await loadDocxFile('Elabrate_Privacy_Policy.docx');
+                document.getElementById('privacyContent').innerHTML = privacyData;
+            }
+            openModal('privacyModal');
+        }
+
+        // Set up event listeners for modals
+        function setupModalListeners() {
+            // Disclaimer link and close button
+            document.getElementById('disclaimerLink').addEventListener('click', loadDisclaimerData);
+            document.querySelector('#disclaimerModal .policy-close').addEventListener('click', () => closeModal('disclaimerModal'));
+
+            // Privacy policy link and close button
+            document.getElementById('privacyLink').addEventListener('click', loadPrivacyData);
+            document.querySelector('#privacyModal .policy-close').addEventListener('click', () => closeModal('privacyModal'));
+
+            // Close modals when clicking outside
+            window.addEventListener('click', (event) => {
+                if (event.target.classList.contains('policy-modal')) {
+                    closeModal(event.target.id);
+                }
+            });
+        }
+
         // Initialize when DOM content is loaded
-        document.addEventListener('DOMContentLoaded', loadXLSXData);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadXLSXData();
+            setupModalListeners();
+        });
     </script>
+    
+    <!-- Bootstrap JS (required for dropdowns) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
