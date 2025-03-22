@@ -343,6 +343,12 @@
                 transform: translateY(0);
             }
         }
+        
+        /* Hide the inline Power BI container by default */
+        #powerBIContainer {
+            display: none;
+        }
+        
     </style>
 </head>
 <body>
@@ -356,8 +362,11 @@
 
     <main class="container">
         <div class="row search-bar">
-            <div class="col-md-6 offset-md-3">
+            <div class="col-md-6 offset-md-3 position-relative">
                 <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search labs by name, title, or keywords..." oninput="filterLabs()">
+                <button id="mapIconBtn" class="btn btn-primary position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); padding: 6px 10px; border-radius: 50%;" title="View Labs Map">
+                    <i class="fas fa-map-marked-alt"></i>
+                </button>
             </div>
         </div>
         
@@ -404,6 +413,17 @@
             <div id="privacyContent">
                 <div class="loading-spinner"></div>
                 <p>Loading privacy policy...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Power BI Map Modal -->
+    <div id="mapModal" class="policy-modal">
+        <div class="policy-modal-content" style="max-width: 90%; width: 1200px; max-height: 90vh;">
+            <span class="policy-close">&times;</span>
+            <h2 class="policy-title">Johns Hopkins Labs Map</h2>
+            <div id="mapContent">
+                <iframe title="elabrate_map" width="100%" height="650" src="https://app.powerbi.com/reportEmbed?reportId=ffa103ba-cc27-484e-a87a-a9136c5ab3cb&autoAuth=true&ctid=a2767ae0-28fb-48e2-9521-089bd6d85fd6" frameborder="0" allowFullScreen="true"></iframe>
             </div>
         </div>
     </div>
@@ -662,11 +682,15 @@
             // Disclaimer link and close button
             document.getElementById('disclaimerLink').addEventListener('click', loadDisclaimerData);
             document.querySelector('#disclaimerModal .policy-close').addEventListener('click', () => closeModal('disclaimerModal'));
-
+        
             // Privacy policy link and close button
             document.getElementById('privacyLink').addEventListener('click', loadPrivacyData);
             document.querySelector('#privacyModal .policy-close').addEventListener('click', () => closeModal('privacyModal'));
-
+        
+            // Map icon button and close button
+            document.getElementById('mapIconBtn').addEventListener('click', () => openModal('mapModal'));
+            document.querySelector('#mapModal .policy-close').addEventListener('click', () => closeModal('mapModal'));
+        
             // Close modals when clicking outside
             window.addEventListener('click', (event) => {
                 if (event.target.classList.contains('policy-modal')) {
