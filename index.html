@@ -326,6 +326,16 @@
             animation: spin 2s linear infinite;
             margin: 20px auto;
         }
+        
+        .logo-img {
+            width: 100px;
+            height: 75px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.5s ease;
+            cursor: pointer; /* Add cursor pointer to indicate clickability */
+        }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -348,6 +358,188 @@
         #powerBIContainer {
             display: none;
         }
+        
+        /* Chat bot styles */
+        #chatBot {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            font-family: 'Arial', sans-serif;
+        }
+    
+        .chat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #0056b3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+    
+        .chat-icon:hover {
+            transform: scale(1.1);
+        }
+    
+        .chat-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    
+        .chat-window {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 320px;
+            height: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            display: none;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+    
+        .chat-window.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+    
+        .chat-header {
+            background: linear-gradient(to right, #003366, #0056b3);
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    
+        .chat-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+        }
+    
+        .chat-header-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+    
+        .chat-controls button {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 14px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+    
+        .chat-controls button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #f5f5f5;
+        }
+    
+        .message {
+            margin-bottom: 15px;
+            max-width: 80%;
+        }
+    
+        .user-message {
+            margin-left: auto;
+        }
+    
+        .bot-message {
+            margin-right: auto;
+        }
+    
+        .message-content {
+            padding: 10px;
+            border-radius: 15px;
+        }
+    
+        .user-message .message-content {
+            background: #0056b3;
+            color: white;
+            border-top-right-radius: 0;
+        }
+    
+        .bot-message .message-content {
+            background: white;
+            color: #333;
+            border-top-left-radius: 0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+    
+        .message-time {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 5px;
+            text-align: right;
+        }
+    
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+    
+        .chat-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+    
+        .chat-input input:focus {
+            border-color: #0056b3;
+        }
+    
+        .chat-input button {
+            background: #0056b3;
+            color: white;
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+    
+        .chat-input button:hover {
+            background: #003366;
+        }
+        
         
     </style>
 </head>
@@ -416,6 +608,18 @@
             </div>
         </div>
     </div>
+    
+    <!-- Background Story Modal -->
+    <div id="backgroundModal" class="policy-modal">
+        <div class="policy-modal-content">
+            <span class="policy-close">&times;</span>
+            <h2 class="policy-title">eLabRate Background Story</h2>
+            <div id="backgroundContent">
+                <div class="loading-spinner"></div>
+                <p>Loading background story...</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Power BI Map Modal -->
     <div id="mapModal" class="policy-modal">
@@ -427,12 +631,61 @@
             </div>
         </div>
     </div>
-
+    
+    <!-- Chat bot widget HTML (add right before the closing body tag) -->
+    <div id="chatBot">
+        <div class="chat-icon" id="chatBotIcon">
+            <img src="logo/logo_v0.png" alt="Chat Bot" class="chat-avatar">
+        </div>
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <img src="logo/logo_v0.png" alt="eLabRate Assistant" class="chat-header-avatar">
+                    <span>eLabRate Assistant</span>
+                </div>
+                <div class="chat-controls">
+                    <button id="minimizeChat"><i class="fas fa-minus"></i></button>
+                    <button id="closeChat"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    <div class="message-content">
+                        Hello! I'm the eLabRate assistant. How can I help you find lab information today?
+                    </div>
+                    <div class="message-time">Just now</div>
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="userMessage" placeholder="Type your message...">
+                <button id="sendMessage"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+    
+    
     <script>
         let labsData = [];
         let selectedTags = [];
         let disclaimerData = null;
         let privacyData = null;
+        let backgroundData = null;
+        
+        //Chat bot functionality
+        let botResponses = {
+            "hello": "Hi there! How can I help you today?",
+            "hi": "Hello! What would you like to know about labs at Johns Hopkins?",
+            "how are you": "I'm functioning perfectly! How can I assist you with lab information?",
+            "help": "I can help you find labs, navigate the website, or tell you about the eLabRate project. What would you like to know?",
+            "what is elabrate": "eLabRate is a platform to discover research labs across Johns Hopkins University. Click the logo to learn more about our background story!",
+            "labs": "We have many labs in our database. Try using the search bar or clicking on tags to filter labs by research area.",
+            "search": "You can use the search bar at the top of the page to find labs by name, title, or keywords.",
+            "map": "Click the map icon next to the search bar to see a geographical view of labs across Johns Hopkins.",
+            "contact": "Each lab card contains contact information. Click 'Show More' on any lab card to see contact details.",
+            "background": "Click on our logo at the top of the page to read about the eLabRate project background and story.",
+            "default": "I'm not sure how to help with that. Try asking about labs, search functionality, or the eLabRate project."
+        };
+
 
         // Load the Excel file (labs_merged.xlsx) using XLSX library
         async function loadXLSXData() {
@@ -517,16 +770,14 @@
                     : [];
                 const keywordsHTML = keywordsArr.map(kw => `<span class="keyword">${kw}</span>`).join(' ');
 
-                // Build the folded info container with five rows.
+                // Build the folded info container with three rows (removed PI and Title).
                 const foldedInfoHTML = `
-              <div class="folded-info">
-                <p class="folded-row"><strong>PI:</strong> ${lab["PI"] ? lab["PI"] : ""}</p>
-                <p class="folded-row"><strong>Title:</strong> ${lab["Title"] ? lab["Title"] : ""}</p>
-                <p class="folded-row"><strong>School:</strong> Johns Hopkins University</p>
-                <p class="folded-row"><strong>Department:</strong> ${lab["Source"]}</p>
-                <p class="folded-row keywords-row"><strong>Research Keywords:</strong> ${keywordsHTML}</p>
-              </div>
-            `;
+                  <div class="folded-info">
+                    <p class="folded-row"><strong>School:</strong> Johns Hopkins University</p>
+                    <p class="folded-row"><strong>Department:</strong> ${lab["Source"]}</p>
+                    <p class="folded-row keywords-row"><strong>Research Keywords:</strong> ${keywordsHTML}</p>
+                  </div>
+                `;
 
                 const col = document.createElement('div');
                 col.classList.add('col-md-4', 'mb-4');
@@ -649,6 +900,15 @@
                 return `<p>Error loading ${filename}. Please try again later.</p>`;
             }
         }
+        
+        // Load background story data
+        async function loadBackgroundData() {
+            if (!backgroundData) {
+                backgroundData = await loadDocxFile('4-Background_story/Elabrate_Background_Story.docx');
+                document.getElementById('backgroundContent').innerHTML = backgroundData;
+            }
+            openModal('backgroundModal');
+        }
 
         // Modal functions
         function openModal(modalId) {
@@ -686,6 +946,12 @@
             // Privacy policy link and close button
             document.getElementById('privacyLink').addEventListener('click', loadPrivacyData);
             document.querySelector('#privacyModal .policy-close').addEventListener('click', () => closeModal('privacyModal'));
+            
+            // Background story modal close button
+            document.querySelector('#backgroundModal .policy-close').addEventListener('click', () => closeModal('backgroundModal'));
+            
+            // Logo click event for background story
+            document.querySelector('.logo-img').addEventListener('click', loadBackgroundData);
         
             // Map icon button and close button
             document.getElementById('mapIconBtn').addEventListener('click', () => openModal('mapModal'));
@@ -698,11 +964,122 @@
                 }
             });
         }
+        
+        // Function to initialize chat bot
+        function initChatBot() {
+            const chatIcon = document.getElementById('chatBotIcon');
+            const chatWindow = document.getElementById('chatWindow');
+            const minimizeBtn = document.getElementById('minimizeChat');
+            const closeBtn = document.getElementById('closeChat');
+            const sendBtn = document.getElementById('sendMessage');
+            const userInput = document.getElementById('userMessage');
+            const chatMessages = document.getElementById('chatMessages');
+    
+            // Toggle chat window
+            chatIcon.addEventListener('click', () => {
+                chatWindow.classList.add('active');
+            });
+    
+            // Minimize chat
+            minimizeBtn.addEventListener('click', () => {
+                chatWindow.classList.remove('active');
+            });
+    
+            // Close chat
+            closeBtn.addEventListener('click', () => {
+                chatWindow.classList.remove('active');
+            });
+    
+            // Send message
+            function sendMessage() {
+                const message = userInput.value.trim();
+                if (message === '') return;
+    
+                // Add user message to chat
+                addMessage(message, 'user');
+                userInput.value = '';
+    
+                // Process and respond
+                setTimeout(() => {
+                    const response = getBotResponse(message);
+                    addMessage(response, 'bot');
+                }, 500);
+            }
+    
+            // Send on button click
+            sendBtn.addEventListener('click', sendMessage);
+    
+            // Send on Enter key
+            userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+    
+            // Add message to chat
+            function addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}-message`;
+    
+                const content = document.createElement('div');
+                content.className = 'message-content';
+                content.textContent = text;
+    
+                const time = document.createElement('div');
+                time.className = 'message-time';
+                time.textContent = 'Just now';
+    
+                messageDiv.appendChild(content);
+                messageDiv.appendChild(time);
+                chatMessages.appendChild(messageDiv);
+    
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+    
+            // Get bot response based on user input
+            function getBotResponse(input) {
+                const lowercaseInput = input.toLowerCase();
+                
+                // Check for keywords in the input
+                for (const [key, value] of Object.entries(botResponses)) {
+                    if (lowercaseInput.includes(key)) {
+                        return value;
+                    }
+                }
+                
+                // If no keywords match, search for labs
+                if (lowercaseInput.includes("find") || lowercaseInput.includes("search") || lowercaseInput.includes("looking for")) {
+                    // Extract potential search terms (words after "find", "search" or "looking for")
+                    let searchTerm = "";
+                    if (lowercaseInput.includes("find")) {
+                        searchTerm = input.substring(input.toLowerCase().indexOf("find") + 5);
+                    } else if (lowercaseInput.includes("search")) {
+                        searchTerm = input.substring(input.toLowerCase().indexOf("search") + 7);
+                    } else if (lowercaseInput.includes("looking for")) {
+                        searchTerm = input.substring(input.toLowerCase().indexOf("looking for") + 12);
+                    }
+                    
+                    if (searchTerm.trim()) {
+                        // Perform search using the existing search function
+                        document.getElementById('searchInput').value = searchTerm.trim();
+                        filterLabs();
+                        return `I've searched for "${searchTerm.trim()}" for you. Check out the results above!`;
+                    }
+                }
+                
+                return botResponses.default;
+            }
+        }
+        
 
         // Initialize when DOM content is loaded
         document.addEventListener('DOMContentLoaded', () => {
             loadXLSXData();
             setupModalListeners();
+            loadXLSXData();
+            setupModalListeners();
+            initChatBot(); // Initialize chat bot
         });
     </script>
     
